@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ratepay_challenge_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - ratepay_network
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=ratepay_challenge
+      - DB_USERNAME=ratepay_user
+      - DB_PASSWORD=ratepay_password
+
+  nginx:
+    image: nginx:alpine
+    container_name: ratepay_challenge_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    networks:
+      - ratepay_network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: ratepay_challenge_db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ratepay_challenge
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: ratepay_user
+      MYSQL_PASSWORD: ratepay_password
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - ratepay_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ratepay_challenge_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
+    networks:
+      - ratepay_network
+    depends_on:
+      - db
+
+networks:
+  ratepay_network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
