@@ -1,0 +1,28 @@
+{
+    "name": "ratepay/fullstack-coding-challenge",
+    "description": "Ratepay Fullstack Developer Coding Challenge - Task Management API",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ratepay",
+            "email": "dev@ratepay.com"
+        }
+    ],
+    "scripts": {
+        "docker-setup": [
+            "./docker-setup.sh"
+        ],
+        "docker-up": [
+            "docker-compose up -d"
+        ],
+        "docker-down": [
+            "docker-compose down"
+        ],
+        "docker-logs": [
+            "docker-compose logs -f"
+        ]
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
