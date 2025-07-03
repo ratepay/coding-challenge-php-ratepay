@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\UserResource;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UsersController extends Controller
 {
@@ -35,9 +36,16 @@ class UsersController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show($id)
     {
-        return new UserResource($user);
+        try {
+            $user = User::findOrFail($id);
+            return new UserResource($user);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+        }
     }
 
     /**

@@ -22,11 +22,20 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|in:pending,in_progress,completed',
-            'priority' => 'required|in:low,medium,high',
-            'due_date' => 'nullable|date|after:today',
+            'data.attributes.title' => 'required|string|max:255',
+            'data.attributes.description' => 'nullable|string',
+            'data.attributes.status' => 'required|string|in:pending,in_progress,completed,cancelled',
+            'data.attributes.priority' => 'required|string|in:low,medium,high',
+            'data.attributes.due_date' => 'nullable|date|after:today',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'data.attributes.status.in' => 'The status value is invalid. Please use pending, in_progress, completed, or cancelled.',
+            'data.attributes.priority.in' => 'The priority value is invalid. Please use low, medium, or high.',
+            'data.attributes.due_date.after' => 'The due date must be a future date.',
         ];
     }
 } 

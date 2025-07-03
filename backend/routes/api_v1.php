@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\UsersController;
+use App\Http\Controllers\Api\V1\UserTasksController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,4 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Users routes
     Route::apiResource('users', UsersController::class);
+    
+    // Nested user tasks routes
+    Route::apiResource('users.tasks', UserTasksController::class);
 }); 

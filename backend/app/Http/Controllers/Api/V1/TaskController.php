@@ -2,25 +2,26 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Http\Filters\V1\TaskFilter;
 use App\Http\Requests\Api\V1\StoreTaskRequest;
 use App\Http\Requests\Api\V1\UpdateTaskRequest;
 use App\Http\Resources\V1\TaskResource;
 use App\Models\Task;
-use App\Traits\ApiResponses;
-use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class TaskController extends Controller
+class TaskController extends ApiController
 {
-    use ApiResponses;
-
     /**
      * Display a listing of the resource.
      */
     public function index(TaskFilter $filters)
     {
-        return TaskResource::collection(Task::filter($filters)->paginate());
+        return TaskResource::collection(
+            Task::where('user_id', auth()->id())
+                ->filter($filters)
+                ->paginate()
+        );
     }
 
     /**
@@ -28,7 +29,24 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request)
     {
-        //
+        try {
+            $user = User::findOrFail($request->input('data.relationships.user.data.id'));
+        } catch (ModelNotFoundException $e) {
+            return $this->error('User not found', [
+                'error' => 'The provided user ID does not exist.'
+            ], 404);
+        }
+
+        $model = [
+            'title' => $request->input('data.attributes.title'),
+            'description' => $request->input('data.attributes.description'),
+            'status' => $request->input('data.attributes.status'),
+            'priority' => $request->input('data.attributes.priority'),
+            'due_date' => $request->input('data.attributes.due_date'),
+            'user_id' => $request->input('data.relationships.user.data.id'),
+        ];
+
+        return new TaskResource(Task::create($model));
     }
 
     /**
@@ -57,14 +75,5 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         //
-    }
-
-    /**
-     * Check if a relationship should be included.
-     */
-    private function include($relationship)
-    {
-        return request()->has('include') && 
-               in_array($relationship, explode(',', request()->get('include')));
     }
 } 
