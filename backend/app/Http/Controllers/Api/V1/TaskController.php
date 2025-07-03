@@ -35,6 +35,9 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
+        // Eager load the user relationship to prevent N+1 queries
+        $task->load('user');
+        
         return new TaskResource($task);
     }
 
