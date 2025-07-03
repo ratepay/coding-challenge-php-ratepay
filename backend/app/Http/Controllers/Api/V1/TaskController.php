@@ -72,8 +72,21 @@ class TaskController extends ApiController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy($taskId)
     {
-        //
+        try {
+            $task = Task::findOrFail($taskId);
+            
+            // Ensure the authenticated user can only delete their own tasks
+            if ($task->user_id != auth()->id()) {
+                return $this->error('Task cannot be found', 404);
+            }
+            
+            $task->delete();
+
+            return response()->json(['message' => 'Task successfully deleted'], 200);
+        } catch (ModelNotFoundException $e) {
+            return $this->error('Task cannot be found', 404);
+        }
     }
 } 
