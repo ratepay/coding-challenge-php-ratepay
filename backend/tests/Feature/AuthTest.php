@@ -276,4 +276,170 @@ class AuthTest extends TestCase
                 'status' => 401
             ]);
     }
+
+    /**
+     * Test user registration with valid data
+     */
+    public function test_user_can_register_with_valid_data()
+    {
+        $userData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com',
+                    'password' => 'password123',
+                    'password_confirmation' => 'password123',
+                ]
+            ]
+        ];
+
+        $response = $this->postJson('/api/v1/register', $userData);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'message',
+                'data' => [
+                    'user' => [
+                        'id',
+                        'name',
+                        'email',
+                        'created_at'
+                    ],
+                    'token'
+                ],
+                'status'
+            ])
+            ->assertJson([
+                'message' => 'User registered successfully',
+                'status' => 201,
+                'data' => [
+                    'user' => [
+                        'name' => 'John Doe',
+                        'email' => 'john@example.com'
+                    ]
+                ]
+            ]);
+
+        // Verify user was created in database
+        $this->assertDatabaseHas('users', [
+            'name' => 'John Doe',
+            'email' => 'john@example.com'
+        ]);
+
+        // Verify token was created
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'name' => 'Api token for john@example.com'
+        ]);
+    }
+
+    /**
+     * Test user registration with invalid email
+     */
+    public function test_user_cannot_register_with_invalid_email()
+    {
+        $userData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Doe',
+                    'email' => 'invalid-email',
+                    'password' => 'password123',
+                    'password_confirmation' => 'password123',
+                ]
+            ]
+        ];
+
+        $response = $this->postJson('/api/v1/register', $userData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.email']);
+    }
+
+    /**
+     * Test user registration with duplicate email
+     */
+    public function test_user_cannot_register_with_duplicate_email()
+    {
+        // Create a user first
+        User::factory()->create(['email' => 'john@example.com']);
+
+        $userData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com',
+                    'password' => 'password123',
+                    'password_confirmation' => 'password123',
+                ]
+            ]
+        ];
+
+        $response = $this->postJson('/api/v1/register', $userData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.email']);
+    }
+
+    /**
+     * Test user registration with mismatched passwords
+     */
+    public function test_user_cannot_register_with_mismatched_passwords()
+    {
+        $userData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com',
+                    'password' => 'password123',
+                    'password_confirmation' => 'differentpassword',
+                ]
+            ]
+        ];
+
+        $response = $this->postJson('/api/v1/register', $userData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.password']);
+    }
+
+    /**
+     * Test user registration with missing required fields
+     */
+    public function test_user_cannot_register_with_missing_fields()
+    {
+        $userData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Doe',
+                    // Missing email and password
+                ]
+            ]
+        ];
+
+        $response = $this->postJson('/api/v1/register', $userData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.email', 'data.attributes.password']);
+    }
+
+    /**
+     * Test user registration with weak password
+     */
+    public function test_user_cannot_register_with_weak_password()
+    {
+        $userData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com',
+                    'password' => '123', // Too short
+                    'password_confirmation' => '123',
+                ]
+            ]
+        ];
+
+        $response = $this->postJson('/api/v1/register', $userData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.password']);
+    }
 } 
