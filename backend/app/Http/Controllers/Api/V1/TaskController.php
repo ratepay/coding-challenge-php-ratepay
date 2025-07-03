@@ -38,16 +38,7 @@ class TaskController extends ApiController
             ], 404);
         }
 
-        $model = [
-            'title' => $request->input('data.attributes.title'),
-            'description' => $request->input('data.attributes.description'),
-            'status' => $request->input('data.attributes.status'),
-            'priority' => $request->input('data.attributes.priority'),
-            'due_date' => $request->input('data.attributes.due_date'),
-            'user_id' => $request->input('data.relationships.user.data.id'),
-        ];
-
-        return new TaskResource(Task::create($model));
+        return new TaskResource(Task::create($request->mappedAttributes()));
     }
 
     /**
@@ -65,9 +56,22 @@ class TaskController extends ApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTaskRequest $request, Task $task)
+    public function update(UpdateTaskRequest $request, $taskId)
     {
-        //
+        try {
+            $task = Task::findOrFail($taskId);
+            
+            // Ensure the authenticated user can only update their own tasks
+            if ($task->user_id != auth()->id()) {
+                return $this->error('Task cannot be found', 404);
+            }
+
+            $task->update($request->mappedAttributes());
+
+            return new TaskResource($task);
+        } catch (ModelNotFoundException $e) {
+            return $this->error('Task cannot be found', 404);
+        }
     }
 
     /**
@@ -83,16 +87,7 @@ class TaskController extends ApiController
                 return $this->error('Task cannot be found', 404);
             }
 
-            $model = [
-                'title' => $request->input('data.attributes.title'),
-                'description' => $request->input('data.attributes.description'),
-                'status' => $request->input('data.attributes.status'),
-                'priority' => $request->input('data.attributes.priority'),
-                'due_date' => $request->input('data.attributes.due_date'),
-                'user_id' => $request->input('data.relationships.user.data.id'),
-            ];
-            
-            $task->update($model);
+            $task->update($request->mappedAttributes());
 
             return new TaskResource($task);
         } catch (ModelNotFoundException $e) {

@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateTaskRequest extends FormRequest
+class UpdateTaskRequest extends BaseTaskRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,12 +19,15 @@ class UpdateTaskRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|nullable|string',
-            'status' => 'sometimes|required|in:pending,in_progress,completed',
-            'priority' => 'sometimes|required|in:low,medium,high',
-            'due_date' => 'sometimes|nullable|date|after:today',
+        $rules = [
+            'data.attributes.title' => 'sometimes|required|string',
+            'data.attributes.description' => 'sometimes|required|string',
+            'data.attributes.status' => 'sometimes|required|string|in:pending,in_progress,completed',
+            'data.attributes.priority' => 'sometimes|required|string|in:low,medium,high',
+            'data.attributes.due_date' => 'sometimes|required|date',
+            'data.relationships.user.data.id' => 'sometimes|integer',
         ];
+
+        return $rules;
     }
 } 

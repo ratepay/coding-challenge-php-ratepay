@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Task routes
     Route::apiResource('tasks', TaskController::class)->except('update');
     Route::put('tasks/{task}', [TaskController::class, 'replace']);
+    Route::patch('tasks/{task}', [TaskController::class, 'update']);
     
     // Users routes
     Route::apiResource('users', UsersController::class);
@@ -41,4 +42,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Nested user tasks routes
     Route::apiResource('users.tasks', UserTasksController::class)->except('update');
     Route::put('users/{user}/tasks/{task}', [UserTasksController::class, 'replace']);
+    Route::patch('users/{user}/tasks/{task}', [UserTasksController::class, 'update']);
 }); 

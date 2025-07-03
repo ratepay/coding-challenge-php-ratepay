@@ -256,4 +256,112 @@ class TaskControllerTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    /**
+     * Test updating own task via main task endpoint (PATCH)
+     */
+    public function test_can_update_own_task(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->user->id]);
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'status' => 'completed',
+                    'priority' => 'high',
+                ],
+            ],
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->patchJson("/api/v1/tasks/{$task->id}", $updateData);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'data' => [
+                'attributes' => [
+                    'status' => 'completed',
+                    'priority' => 'high',
+                ],
+            ],
+        ]);
+
+        // Verify task is actually updated in database
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => 'completed',
+            'priority' => 'high',
+        ]);
+    }
+
+    /**
+     * Test updating another user's task returns 404
+     */
+    public function test_cannot_update_another_users_task(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->otherUser->id]);
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'status' => 'completed',
+                ],
+            ],
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->patchJson("/api/v1/tasks/{$task->id}", $updateData);
+
+        $response->assertStatus(404);
+        $response->assertJson([
+            'message' => 'Task cannot be found',
+            'status' => 404,
+        ]);
+    }
+
+    /**
+     * Test updating non-existent task returns 404
+     */
+    public function test_updating_nonexistent_task_returns_404(): void
+    {
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'status' => 'completed',
+                ],
+            ],
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->patchJson("/api/v1/tasks/99999", $updateData);
+
+        $response->assertStatus(404);
+        $response->assertJson([
+            'message' => 'Task cannot be found',
+            'status' => 404,
+        ]);
+    }
+
+    /**
+     * Test unauthorized update access without token
+     */
+    public function test_unauthorized_update_returns_401(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->user->id]);
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'status' => 'completed',
+                ],
+            ],
+        ];
+
+        $response = $this->patchJson("/api/v1/tasks/{$task->id}", $updateData);
+
+        $response->assertStatus(401);
+    }
 } 

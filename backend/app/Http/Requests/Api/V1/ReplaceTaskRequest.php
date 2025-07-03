@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class ReplaceTaskRequest extends FormRequest
+class ReplaceTaskRequest extends BaseTaskRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +22,8 @@ class ReplaceTaskRequest extends FormRequest
         $rules = [
             'data.attributes.title' => 'required|string',
             'data.attributes.description' => 'required|string',
-            'data.attributes.status' => 'required|string|in:pending,in_progress,completed,cancelled',
-            'data.attributes.priority' => 'required|string|in:low,medium,high,urgent',
+            'data.attributes.status' => 'required|string|in:pending,in_progress,completed',
+            'data.attributes.priority' => 'required|string|in:low,medium,high',
             'data.attributes.due_date' => 'required|date',
             'data.relationships.user.data.id' => 'required|integer',
         ];
@@ -36,8 +34,8 @@ class ReplaceTaskRequest extends FormRequest
     public function messages()
     {
         return [
-            'data.attributes.status.in' => 'The status value is invalid. Please use pending, in_progress, completed, or cancelled.',
-            'data.attributes.priority.in' => 'The priority value is invalid. Please use low, medium, high, or urgent.',
+            'data.attributes.status.in' => 'The status value is invalid. Please use pending, in_progress, or completed.',
+            'data.attributes.priority.in' => 'The priority value is invalid. Please use low, medium, or high.',
         ];
     }
 } 
