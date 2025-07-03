@@ -32,11 +32,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile']);
 
     // Task routes
-    Route::apiResource('tasks', TaskController::class);
+    Route::apiResource('tasks', TaskController::class)->except('update');
+    Route::put('tasks/{task}', [TaskController::class, 'replace']);
     
     // Users routes
     Route::apiResource('users', UsersController::class);
     
     // Nested user tasks routes
-    Route::apiResource('users.tasks', UserTasksController::class);
+    Route::apiResource('users.tasks', UserTasksController::class)->except('update');
+    Route::put('users/{user}/tasks/{task}', [UserTasksController::class, 'replace']);
 }); 

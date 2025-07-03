@@ -102,4 +102,158 @@ class TaskControllerTest extends TestCase
         // Verify task is not deleted
         $this->assertDatabaseHas('tasks', ['id' => $task->id]);
     }
+
+    /**
+     * Test replacing own task via main task endpoint
+     */
+    public function test_can_replace_own_task(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->user->id]);
+
+        $replaceData = [
+            'data' => [
+                'attributes' => [
+                    'title' => 'Updated Task Title',
+                    'description' => 'Updated task description',
+                    'status' => 'completed',
+                    'priority' => 'high',
+                    'due_date' => '2024-12-31',
+                ],
+                'relationships' => [
+                    'user' => [
+                        'data' => [
+                            'id' => $this->user->id,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->putJson("/api/v1/tasks/{$task->id}", $replaceData);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'data' => [
+                'attributes' => [
+                    'title' => 'Updated Task Title',
+                    'status' => 'completed',
+                    'priority' => 'high',
+                ],
+            ],
+        ]);
+
+        // Verify task is actually updated in database
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'title' => 'Updated Task Title',
+            'description' => 'Updated task description',
+            'status' => 'completed',
+            'priority' => 'high',
+        ]);
+    }
+
+    /**
+     * Test replacing another user's task returns 404
+     */
+    public function test_cannot_replace_another_users_task(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->otherUser->id]);
+
+        $replaceData = [
+            'data' => [
+                'attributes' => [
+                    'title' => 'Updated Task Title',
+                    'description' => 'Updated task description',
+                    'status' => 'completed',
+                    'priority' => 'high',
+                    'due_date' => '2024-12-31',
+                ],
+                'relationships' => [
+                    'user' => [
+                        'data' => [
+                            'id' => $this->otherUser->id,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->putJson("/api/v1/tasks/{$task->id}", $replaceData);
+
+        $response->assertStatus(404);
+        $response->assertJson([
+            'message' => 'Task cannot be found',
+            'status' => 404,
+        ]);
+    }
+
+    /**
+     * Test replacing non-existent task returns 404
+     */
+    public function test_replacing_nonexistent_task_returns_404(): void
+    {
+        $replaceData = [
+            'data' => [
+                'attributes' => [
+                    'title' => 'Updated Task Title',
+                    'description' => 'Updated task description',
+                    'status' => 'completed',
+                    'priority' => 'high',
+                    'due_date' => '2024-12-31',
+                ],
+                'relationships' => [
+                    'user' => [
+                        'data' => [
+                            'id' => $this->user->id,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->putJson("/api/v1/tasks/99999", $replaceData);
+
+        $response->assertStatus(404);
+        $response->assertJson([
+            'message' => 'Task cannot be found',
+            'status' => 404,
+        ]);
+    }
+
+    /**
+     * Test unauthorized replace access without token
+     */
+    public function test_unauthorized_replace_returns_401(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->user->id]);
+
+        $replaceData = [
+            'data' => [
+                'attributes' => [
+                    'title' => 'Updated Task Title',
+                    'description' => 'Updated task description',
+                    'status' => 'completed',
+                    'priority' => 'high',
+                    'due_date' => '2024-12-31',
+                ],
+                'relationships' => [
+                    'user' => [
+                        'data' => [
+                            'id' => $this->user->id,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->putJson("/api/v1/tasks/{$task->id}", $replaceData);
+
+        $response->assertStatus(401);
+    }
 } 

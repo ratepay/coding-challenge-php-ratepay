@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Filters\V1\TaskFilter;
 use App\Http\Requests\Api\V1\StoreTaskRequest;
 use App\Http\Requests\Api\V1\UpdateTaskRequest;
+use App\Http\Requests\Api\V1\ReplaceTaskRequest;
 use App\Http\Resources\V1\TaskResource;
 use App\Models\Task;
 use App\Models\User;
@@ -67,6 +68,36 @@ class TaskController extends ApiController
     public function update(UpdateTaskRequest $request, Task $task)
     {
         //
+    }
+
+    /**
+     * Replace the specified resource in storage.
+     */
+    public function replace(ReplaceTaskRequest $request, $taskId)
+    {
+        try {
+            $task = Task::findOrFail($taskId);
+            
+            // Ensure the authenticated user can only replace their own tasks
+            if ($task->user_id != auth()->id()) {
+                return $this->error('Task cannot be found', 404);
+            }
+
+            $model = [
+                'title' => $request->input('data.attributes.title'),
+                'description' => $request->input('data.attributes.description'),
+                'status' => $request->input('data.attributes.status'),
+                'priority' => $request->input('data.attributes.priority'),
+                'due_date' => $request->input('data.attributes.due_date'),
+                'user_id' => $request->input('data.relationships.user.data.id'),
+            ];
+            
+            $task->update($model);
+
+            return new TaskResource($task);
+        } catch (ModelNotFoundException $e) {
+            return $this->error('Task cannot be found', 404);
+        }
     }
 
     /**
