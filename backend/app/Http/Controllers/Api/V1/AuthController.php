@@ -1,12 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ApiResponses;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    use ApiResponses;
+
     /**
      * Register a new user
      * 
@@ -24,13 +27,9 @@ class AuthController extends Controller
         // 3. Generate authentication token
         // 4. Return success response with token
         
-        return response()->json([
-            'success' => true,
-            'message' => 'User registered successfully',
-            'data' => [
-                'user' => [],
-                'token' => ''
-            ]
+        return $this->success('User registered successfully', [
+            'user' => [],
+            'token' => ''
         ], 201);
     }
 
@@ -51,13 +50,9 @@ class AuthController extends Controller
         // 3. Generate authentication token
         // 4. Return success response with token
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
-            'data' => [
-                'user' => [],
-                'token' => ''
-            ]
+        return $this->success('Login successful', [
+            'user' => [],
+            'token' => ''
         ]);
     }
 
@@ -75,10 +70,7 @@ class AuthController extends Controller
         // 1. Revoke current access token
         // 2. Return success response
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout successful'
-        ]);
+        return $this->success('Logout successful');
     }
 
     /**
@@ -97,10 +89,6 @@ class AuthController extends Controller
         // 2. Update user data
         // 3. Return success response with updated user
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'data' => []
-        ]);
+        return $this->success('Profile updated successfully', []);
     }
-}
+} 
