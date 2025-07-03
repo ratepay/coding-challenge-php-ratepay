@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Filters\V1\TaskFilter;
 use App\Http\Requests\Api\V1\StoreTaskRequest;
 use App\Http\Requests\Api\V1\UpdateTaskRequest;
 use App\Http\Resources\V1\TaskResource;
@@ -17,9 +18,9 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(TaskFilter $filters)
     {
-        return TaskResource::collection(Task::paginate());
+        return TaskResource::collection(Task::filter($filters)->paginate());
     }
 
     /**
@@ -35,9 +36,10 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        // Eager load the user relationship to prevent N+1 queries
-        $task->load('user');
-        
+        if ($this->include('user')) {
+            return new TaskResource($task->load('user'));
+        }
+
         return new TaskResource($task);
     }
 
@@ -55,5 +57,14 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         //
+    }
+
+    /**
+     * Check if a relationship should be included.
+     */
+    private function include($relationship)
+    {
+        return request()->has('include') && 
+               in_array($relationship, explode(',', request()->get('include')));
     }
 } 
