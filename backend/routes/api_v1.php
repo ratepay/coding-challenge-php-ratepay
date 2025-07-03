@@ -17,18 +17,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/register', [AuthController::class, 'register']);
+// Route::post('/login', [AuthController::class, 'login']);
 
-// Protected routes
-Route::middleware('auth:sanctum')->group(function () {
-    // User routes
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-    Route::put('/user', [AuthController::class, 'updateProfile']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+// // Protected routes
+// Route::middleware('auth:sanctum')->group(function () {
+//     // User routes
+//     Route::get('/user', function (Request $request) {
+//         return $request->user();
+//     });
+//     Route::put('/user', [AuthController::class, 'updateProfile']);
+//     Route::post('/logout', [AuthController::class, 'logout']);
     
-    // Task routes
-    Route::apiResource('tasks', TaskController::class);
-}); 
+//     // Task routes
+//     Route::apiResource('tasks', TaskController::class);
+// }); 
