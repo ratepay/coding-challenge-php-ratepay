@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\LoginUserRequest;
+use App\Models\User;
 use App\Traits\ApiResponses;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -39,20 +42,31 @@ class AuthController extends Controller
      * TODO: Implement user login
      * Expected fields: email, password
      * 
-     * @param Request $request
+     * @param LoginUserRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request)
+    public function login(LoginUserRequest $request)
     {
         // TODO: Implement user login
-        // 1. Validate input data
+        // 1. Validate input data ✓ (handled by LoginUserRequest)
         // 2. Attempt authentication
         // 3. Generate authentication token
         // 4. Return success response with token
         
-        return $this->success('Login successful', [
-            'user' => [],
-            'token' => ''
+        $credentials = $request->validated();
+        
+        if (!Auth::attempt($credentials)) {
+            return $this->error('Invalid credentials', 401);
+        }
+
+        $user = User::firstWhere('email', $request->email);
+
+        return $this->ok('Authenticated', [
+            'token' => $user->createToken(
+                'Api token for ' . $user->email,
+                ['*'],
+                now()->addMonth()
+            )->plainTextToken,
         ]);
     }
 
@@ -67,10 +81,11 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         // TODO: Implement user logout
-        // 1. Revoke current access token
-        // 2. Return success response
+        // 1. Revoke current access token ✓
+        // 2. Return success response ✓
         
-        return $this->success('Logout successful');
+        $request->user()->currentAccessToken()->delete();
+        return $this->ok('Logout successful');
     }
 
     /**
