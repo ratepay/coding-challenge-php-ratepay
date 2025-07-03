@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\LoginUserRequest;
 use App\Http\Requests\Api\V1\RegisterUserRequest;
+use App\Http\Requests\Api\V1\UpdateProfileRequest;
 use App\Models\User;
 use App\Traits\ApiResponses;
 use Illuminate\Http\Request;
@@ -105,19 +106,24 @@ class AuthController extends Controller
     /**
      * Update user profile
      * 
-     * TODO: Implement profile update
-     * Expected fields: name, email (optional)
-     * 
-     * @param Request $request
+     * @param UpdateProfileRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateProfile(Request $request)
+    public function updateProfile(UpdateProfileRequest $request)
     {
-        // TODO: Implement profile update
-        // 1. Validate input data
-        // 2. Update user data
-        // 3. Return success response with updated user
+        $user = $request->user();
+        $validatedData = $request->validated();
         
-        return $this->success('Profile updated successfully', []);
+        // Update the user
+        $user->update($validatedData);
+
+        return $this->success('Profile updated successfully', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'updated_at' => $user->updated_at,
+            ]
+        ]);
     }
 } 

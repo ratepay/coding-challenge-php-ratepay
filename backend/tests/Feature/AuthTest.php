@@ -286,7 +286,7 @@ class AuthTest extends TestCase
             'data' => [
                 'attributes' => [
                     'name' => 'John Doe',
-                    'email' => 'john@example.com',
+                    'email' => 'john_register@example.com',
                     'password' => 'password123',
                     'password_confirmation' => 'password123',
                 ]
@@ -315,7 +315,7 @@ class AuthTest extends TestCase
                 'data' => [
                     'user' => [
                         'name' => 'John Doe',
-                        'email' => 'john@example.com'
+                        'email' => 'john_register@example.com'
                     ]
                 ]
             ]);
@@ -323,12 +323,12 @@ class AuthTest extends TestCase
         // Verify user was created in database
         $this->assertDatabaseHas('users', [
             'name' => 'John Doe',
-            'email' => 'john@example.com'
+            'email' => 'john_register@example.com'
         ]);
 
         // Verify token was created
         $this->assertDatabaseHas('personal_access_tokens', [
-            'name' => 'Api token for john@example.com'
+            'name' => 'Api token for john_register@example.com'
         ]);
     }
 
@@ -360,13 +360,13 @@ class AuthTest extends TestCase
     public function test_user_cannot_register_with_duplicate_email()
     {
         // Create a user first
-        User::factory()->create(['email' => 'john@example.com']);
+        User::factory()->create(['email' => 'john_duplicate@example.com']);
 
         $userData = [
             'data' => [
                 'attributes' => [
                     'name' => 'John Doe',
-                    'email' => 'john@example.com',
+                    'email' => 'john_duplicate@example.com',
                     'password' => 'password123',
                     'password_confirmation' => 'password123',
                 ]
@@ -441,5 +441,301 @@ class AuthTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['data.attributes.password']);
+    }
+
+    /**
+     * Test user profile update with valid data
+     */
+    public function test_user_can_update_profile_with_valid_data()
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john_update@example.com',
+        ]);
+
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'Jane Doe',
+                    'email' => 'jane_update@example.com',
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'message',
+                'data' => [
+                    'user' => [
+                        'id',
+                        'name',
+                        'email',
+                        'updated_at'
+                    ]
+                ],
+                'status'
+            ])
+            ->assertJson([
+                'message' => 'Profile updated successfully',
+                'status' => 200,
+                'data' => [
+                    'user' => [
+                        'name' => 'Jane Doe',
+                        'email' => 'jane_update@example.com'
+                    ]
+                ]
+            ]);
+
+        // Verify user was updated in database
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'Jane Doe',
+            'email' => 'jane_update@example.com'
+        ]);
+    }
+
+    /**
+     * Test user profile update with only name
+     */
+    public function test_user_can_update_profile_with_only_name()
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john_name@example.com',
+        ]);
+
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'Jane Doe',
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'user' => [
+                        'name' => 'Jane Doe',
+                        'email' => 'john_name@example.com' // Should remain unchanged
+                    ]
+                ]
+            ]);
+
+        // Verify only name was updated
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'Jane Doe',
+            'email' => 'john_name@example.com'
+        ]);
+    }
+
+    /**
+     * Test user profile update with only email
+     */
+    public function test_user_can_update_profile_with_only_email()
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john_email@example.com',
+        ]);
+
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'email' => 'jane_email@example.com',
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'user' => [
+                        'name' => 'John Doe', // Should remain unchanged
+                        'email' => 'jane_email@example.com'
+                    ]
+                ]
+            ]);
+
+        // Verify only email was updated
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'John Doe',
+            'email' => 'jane_email@example.com'
+        ]);
+    }
+
+    /**
+     * Test profile update requires authentication
+     */
+    public function test_profile_update_requires_authentication()
+    {
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'Jane Doe',
+                ]
+            ]
+        ];
+
+        $response = $this->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(401);
+    }
+
+    /**
+     * Test profile update with invalid email
+     */
+    public function test_user_cannot_update_profile_with_invalid_email()
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'email' => 'invalid-email',
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.email']);
+    }
+
+    /**
+     * Test profile update with duplicate email
+     */
+    public function test_user_cannot_update_profile_with_duplicate_email()
+    {
+        $user1 = User::factory()->create(['email' => 'john_duplicate1@example.com']);
+        $user2 = User::factory()->create(['email' => 'jane_duplicate1@example.com']);
+
+        $token = $user1->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'email' => 'jane_duplicate1@example.com', // Already taken by user2
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.email']);
+    }
+
+    /**
+     * Test profile update with too short name
+     */
+    public function test_user_cannot_update_profile_with_too_short_name()
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'A', // Too short (min: 2)
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.name']);
+    }
+
+    /**
+     * Test profile update with too short email
+     */
+    public function test_user_cannot_update_profile_with_too_short_email()
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'email' => 'a@b', // Too short (min: 5)
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['data.attributes.email']);
+    }
+
+    /**
+     * Test user can update to their own email (no conflict)
+     */
+    public function test_user_can_update_to_their_own_email()
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john_own@example.com',
+        ]);
+
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $updateData = [
+            'data' => [
+                'attributes' => [
+                    'name' => 'John Smith',
+                    'email' => 'john_own@example.com', // Same email as current user
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->putJson('/api/v1/profile', $updateData);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'user' => [
+                        'name' => 'John Smith',
+                        'email' => 'john_own@example.com'
+                    ]
+                ]
+            ]);
     }
 } 
