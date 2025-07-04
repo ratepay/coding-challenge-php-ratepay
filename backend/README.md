@@ -1,66 +1,97 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ratepay Live Coding Challenge
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Description
+This is the code for Ratepay Live Coding Challenge. Please read this README file and ensure beforehand that you are able to import the project to an IDE of your choice, build and run it. You don't have to implement something in advance, just get a feeling of the project, so you are mentally prepared for what we might ask you to do in our interview :)
 
-## About Laravel
+This challenge involves implementing a Task Management API using Laravel to demonstrate your PHP and Laravel development skills.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Dependencies
+This project already includes:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Laravel Framework** (PHP web framework)
+- **Laravel Sanctum** (API authentication)
+- **MySQL Database** (via Docker)
+- **Docker & Docker Compose** (containerization)
+- **PHPUnit** (testing framework)
+- **Nginx** (web server)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+You don't have to include any other dependencies for this challenge (unless something is really needed by you). And don't worry if something is unknown to you, you won't be asked to necessarily utilize all of these dependencies.
 
-## Learning Laravel
+## Database and testing data
+Please note that some dummy data is populated to the MySQL database on application startup for you to play around. This behavior is implemented in the `TaskSeeder.php` class.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+The application uses MySQL database running in Docker container.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Database credentials (configured in docker-compose.yml):
+- **Database**: `laravel_db`
+- **User**: `laravel_user` 
+- **Password**: `laravel_password`
+- **Host**: `localhost`
+- **Port**: `3306`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+You can connect to the database using any MySQL client with these credentials.
 
-## Laravel Sponsors
+## How to build, test, run
+You should be able to build and start the application as you get the code from us. The project includes Docker setup which handles all dependencies and services.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### Prerequisites
+- Docker and Docker Compose installed on your system
 
-### Premium Partners
+### Setup and Run
+To build and start the application, execute:
+```bash
+./docker-setup.sh
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+This script will:
+1. Build the Docker containers
+2. Install PHP dependencies via Composer
+3. Set up the database with migrations and seeders
+4. Start all services (PHP, Nginx, MySQL)
 
-## Contributing
+### Running Tests
+To run the test suite:
+```bash
+# Enter the PHP container
+docker-compose exec app bash
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Run PHPUnit tests
+php artisan test
+```
 
-## Code of Conduct
+### API Base URL
+Once running, the API will be available at:
+```
+http://localhost:8000/api
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Project Structure
 
-## Security Vulnerabilities
+```
+backend/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/Api/
+│   │   │   ├── AuthController.php      # Authentication endpoints
+│   │   │   └── TaskController.php      # Task management endpoints
+│   │   └── Requests/
+│   │       ├── StoreTaskRequest.php    # Task creation validation
+│   │       └── UpdateTaskRequest.php   # Task update validation
+│   └── Models/
+│       ├── Task.php                    # Task model
+│       └── User.php                    # User model
+├── database/
+│   ├── migrations/
+│   │   └── create_tasks_table.php      # Database schema
+│   └── seeders/                        # Test data
+└── routes/
+    └── api.php                         # API routes definition
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## What We're Looking For
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Laravel Best Practices**: Proper use of Eloquent, middleware, validation
+- **Security**: Input validation, authorization, secure authentication  
+- **Code Quality**: Clean, readable, well-organized code
+- **API Design**: Consistent responses, proper HTTP status codes
+- **Problem Solving**: Efficient queries, proper error handling
