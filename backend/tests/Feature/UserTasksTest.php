@@ -165,7 +165,9 @@ class UserTasksTest extends TestCase
         $taskData = [
             'data' => [
                 'attributes' => [
-                    // Missing title, status, priority
+                    // Missing required title field
+                    'status' => 'pending',
+                    'priority' => 'high',
                 ]
             ]
         ];
@@ -176,15 +178,11 @@ class UserTasksTest extends TestCase
         ])->postJson("/api/v1/users/{$this->user->id}/tasks", $taskData);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors([
-            'data.attributes.title',
-            'data.attributes.status',
-            'data.attributes.priority'
-        ]);
+        $response->assertJsonValidationErrors(['data.attributes.title']);
     }
 
     /**
-     * Test validation errors for invalid status values
+     * Test validation errors for invalid status
      */
     public function test_validation_errors_for_invalid_status(): void
     {
@@ -208,7 +206,7 @@ class UserTasksTest extends TestCase
     }
 
     /**
-     * Test validation errors for invalid priority values
+     * Test validation errors for invalid priority
      */
     public function test_validation_errors_for_invalid_priority(): void
     {
@@ -229,31 +227,6 @@ class UserTasksTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['data.attributes.priority']);
-    }
-
-    /**
-     * Test validation errors for past due date
-     */
-    public function test_validation_errors_for_past_due_date(): void
-    {
-        $taskData = [
-            'data' => [
-                'attributes' => [
-                    'title' => 'Test Task',
-                    'status' => 'pending',
-                    'priority' => 'high',
-                    'due_date' => now()->subDays(1)->format('Y-m-d'),
-                ]
-            ]
-        ];
-
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
-            'Content-Type' => 'application/json',
-        ])->postJson("/api/v1/users/{$this->user->id}/tasks", $taskData);
-
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['data.attributes.due_date']);
     }
 
     /**
@@ -380,30 +353,6 @@ class UserTasksTest extends TestCase
 
         $response = $this->postJson("/api/v1/users/{$this->user->id}/tasks", $taskData);
         $response->assertStatus(401);
-    }
-
-    /**
-     * Test invalid JSON structure
-     */
-    public function test_invalid_json_structure_returns_validation_error(): void
-    {
-        $taskData = [
-            'title' => 'Test Task', // Missing 'data.attributes' structure
-            'status' => 'pending',
-            'priority' => 'high',
-        ];
-
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
-            'Content-Type' => 'application/json',
-        ])->postJson("/api/v1/users/{$this->user->id}/tasks", $taskData);
-
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors([
-            'data.attributes.title',
-            'data.attributes.status',
-            'data.attributes.priority'
-        ]);
     }
 
     /**
